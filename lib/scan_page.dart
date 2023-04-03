@@ -1,3 +1,4 @@
+
 import 'package:blue_print_pos/blue_print_pos.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -66,21 +67,23 @@ class AvailableDevicesScreenState extends State<AvailableDevicesScreen> {
                 bool isBonded = _bondedDevices.contains(result.device);
                 return ListTile(
                   title: Text(result.device.name ?? 'Unknown Device'),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text('Device Type: ${type.name.toString()}'),
-                      Text('Mac Address: ${result.device.id.toString()}'),
-                    ],
-                  ),
+                  // subtitle: Column(
+                  //   crossAxisAlignment: CrossAxisAlignment.start,
+                  //   mainAxisAlignment: MainAxisAlignment.start,
+                  //   children: [
+                  //     Text('Device Type: ${type.name.toString()}'),
+                  //     Text('Mac Address: ${result.device.id.toString()}'),
+                  //   ],
+                  // ),
                   trailing: ElevatedButton(
                     child: const Text('Connect'),
                     onPressed: () {
                       if (!isBonded) {
                         // connect
                         result.device.pair().then((value) {
-
+                          setState(() {
+                            _bondedDevices.add(result.device);
+                          });
                         });
                       } else {
                         showDialog(

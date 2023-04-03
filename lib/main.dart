@@ -3,19 +3,20 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:async';
-import 'dart:io';
+
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:get_storage/get_storage.dart';
+// import 'package:get_storage/get_storage.dart';
 
 import 'bluetooth_off_screen.dart';
+import 'bluetooth_settings_screen.dart';
 import 'scan_page.dart';
 import 'widgets.dart';
 
 void main() async{
-  await GetStorage.init();
+  // await GetStorage.init();
   runApp(const FlutterBlueApp());
 }
 
@@ -33,7 +34,7 @@ class FlutterBlueApp extends StatelessWidget {
           builder: (c, snapshot) {
             final state = snapshot.data;
             if (state == BluetoothState.on) {
-              return const AvailableDevicesScreen();
+              return BluetoothSettingsScreen();
             }
             return BluetoothOffScreen(state: state);
           }),
