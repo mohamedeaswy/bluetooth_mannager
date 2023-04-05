@@ -2,8 +2,13 @@ import 'package:get_storage/get_storage.dart';
 
 class StorageService {
   static final box = GetStorage();
+  static void remove() async {
+    await box.remove('deviceName');
+    await box.remove('deviceId');
+  }
 
   static void saveDevice(String name, String id) async {
+    remove();
     await box.write('deviceName', name);
     await box.write('deviceId', id);
   }

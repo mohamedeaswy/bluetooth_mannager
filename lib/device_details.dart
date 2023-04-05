@@ -1,3 +1,35 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+
+_detailsDialog ({required BuildContext context, required BluetoothDevice device})=> showDialog(
+  context: context,
+  builder: (BuildContext context) {
+    return AlertDialog(
+      title: const Text('Device Details'),
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+
+          Text(device.name),
+          Text(device.id.id),
+          Text(device.type.name)
+
+        ],
+      ),
+      actions: <Widget>[
+        OutlinedButton(
+          // style: ,
+            child: const Text('OK'),
+            onPressed: ()  {
+              Navigator.pop(context);
+            },),
+      ],
+    );
+  },
+);
+
 // import 'dart:convert';
 //
 // import 'package:bluetooth_mannager/model/storage_model.dart';
