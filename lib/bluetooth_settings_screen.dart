@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'components/daialog.dart';
 import 'model/storage_model.dart';
 
 class BluetoothSettingsScreen extends StatefulWidget {
@@ -11,14 +12,24 @@ class BluetoothSettingsScreen extends StatefulWidget {
 
 class BluetoothSettingsScreenState extends State<BluetoothSettingsScreen> {
   BluetoothDevice? _defaultDevice;
-
+  bool isLoad = false;
   final FlutterBluePlus _flutterBlue = FlutterBluePlus.instance;
+  List<BluetoothDevice> connectedDevices = [];
+  void getConn() async {
+    connectedDevices = await _flutterBlue.connectedDevices;
+  }
 
   @override
   void initState() {
     super.initState();
-    _scanForDevices();
-    _loadDefaultDevice();
+    StorageService.init;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadDefaultDevice();
+      _scanForDevices();
+    });
+
+    getConn();
   }
 
   final List<BluetoothDevice> _devicesList = [];
@@ -46,14 +57,13 @@ class BluetoothSettingsScreenState extends State<BluetoothSettingsScreen> {
     subscription.cancel();
   }
 
-  String _defaultId = '';
-  String _defaultName = '';
-  _loadDefaultDevice() {
+  String _defaultId = '.';
+  String _defaultName = ' ';
+  Future _loadDefaultDevice() async {
     setState(() {
       _defaultId = StorageService.getDeviceId();
       _defaultName = StorageService.getDeviceName();
     });
-    print(_defaultName);
   }
 
   @override
@@ -68,7 +78,7 @@ class BluetoothSettingsScreenState extends State<BluetoothSettingsScreen> {
             // trailing:
             //     IconButton(onPressed: () {}, icon: const Icon(Icons.search)),
           ),
-          Expanded(child: listView())
+          Expanded(child: listView()),
         ],
       ),
       floatingActionButton: StreamBuilder<bool>(
@@ -88,64 +98,96 @@ class BluetoothSettingsScreenState extends State<BluetoothSettingsScreen> {
   }
 
   int _selectedIndex = 100;
-  String cantConnected = '';
-  String selectedDeviceId = '';
+  String cantConnected = 'i';
+  String selectedDeviceId = 'l';
   Widget listView() => ListView.builder(
-        itemCount: _devicesList.length,
-        itemBuilder: (context, index) {
-          final BluetoothDevice device = _devicesList[index];
-          Color selectedColors = Colors.blue.shade200;
-          Color  defaultColor =  Colors.white;
-          Color  errorColor =  Colors.red.shade200;
-          // /
-          Color getColorBasedOnCondition() {
-            if (_defaultId ==  device.id.id) {
-              return selectedColors;
-            } else if (selectedDeviceId == cantConnected) {
-              return errorColor;
-            } else {
-              return defaultColor; // fallback to grey if condition is not found
-            }
-          }
-
-          Color selectedColor = getColorBasedOnCondition();
-          print(selectedColor);
-          return Container(
-            color: selectedColor,
-            child: ListTile(
-              selected: _selectedIndex == index || _defaultId == device.id.id
-                  ? true
-                  : false,
-              onTap: () {
-                setState(() {
-                  _selectedIndex = index;
-
-                  device.connect().then((value) {
-                    selectedDeviceId = device.id.id;
-
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text("connected successful ${device.name}"),
-                      backgroundColor: Colors.blue,
+      itemCount: _devicesList.length,
+      itemBuilder: (BuildContext context, int index) {
+        final BluetoothDevice device = _devicesList[index];
+        Color selectedColors = Colors.blue.shade200;
+        Color defaultColor = Colors.white;
+        Color errorColor = Colors.red.shade200;
+        return Container(
+          decoration: BoxDecoration(
+            color:
+                // _defaultId == device.id.id ||
+                _selectedIndex == index ? selectedColors : defaultColor,
+            // border: Border.all(color: cantConnected == selectedDeviceId ? errorColor : defaultColor),
+          ),
+          child: ListTile(
+            selectedColor: Colors.blue.shade700,
+            selected: _selectedIndex == index
+                // || connectedDevices.contains(device)
+                ? true
+                : false,
+            onTap: isLoad
+                ? () {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text("connecting  is in progress"),
+                      backgroundColor: Colors.orange,
                     ));
-                  }).catchError((e) {
-                    cantConnected = device.id.id;
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text("failed to connect ${device.name}"),
-                      backgroundColor: Colors.red,
-                    ));
-                  });
-                });
-              },
-              title: _defaultId == device.id.id
-                  ? Text(_defaultName)
-                  : Text(device.name),
-              subtitle: Text(device.id.toString()),
-              trailing:
-                  _selectedIndex == index ? button(device) : const SizedBox(),
-            ),
-          );
-        },
-      );
+                  }
+                : () async {
+                    print(StorageService.getDeviceId());
+
+                    setState(() {
+                      isLoad = true;
+                      showLoaderDialog(context);
+                      print(isLoad);
+
+                      _selectedIndex = index;
+                    });
+                    // if (isLoad) {
+                    //   showLoaderDialog(context);
+                    // }
+                    await device.connect().then((value) {
+                      selectedDeviceId = device.id.id;
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text("connected successful ${device.name}"),
+                        backgroundColor: Colors.blue,
+                      ));
+                      setState(() {
+                        isLoad = false;
+
+                        print(isLoad);
+                      });
+                      // Navigator.of(context, rootNavigator: true).pop();
+                    }).onError((error, stackTrace) {
+                      isLoad = false;
+
+                      print(isLoad);
+
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text("Error $error"),
+                        backgroundColor: Colors.red,
+                      ));
+                      setState(() {
+                        cantConnected = device.id.id;
+                      });
+                      // Navigator.of(context, rootNavigator: true).pop();
+                    });
+
+                    setState(() {
+                      isLoad = false;
+
+                      print(isLoad);
+                    });
+                    if (mounted) {
+                      Navigator.of(context, rootNavigator: false).pop();
+                    }
+                  }
+
+            // catchError((e) {}
+            ,
+            title:
+                Text(_defaultId == device.id.id ? _defaultName : device.name),
+            subtitle: Text(device.id.toString()),
+            trailing: _selectedIndex == index && _defaultId == device.id.id
+                ? button(device)
+                : const Text('Default'),
+          ),
+        );
+      });
 
   // Adding custom name pop up
   TextEditingController controller = TextEditingController();
@@ -162,29 +204,19 @@ class BluetoothSettingsScreenState extends State<BluetoothSettingsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(device.name),
-                  Text(device.id.id),
-                  Text(device.type.name),
+                  Text('Mac ID${device.id.id}'),
+                  Text('Type: ${device.type.name}'),
+                  const SizedBox(height: 10),
                   TextFormField(
-                    onChanged: (String? val) {
-                      _defaultName = val ?? '';
-                    },
+                    // onChanged: (String? val) {
+                    //   _defaultName = val ?? '';
+                    // },
                     controller: controller,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                        // borderSide: const BorderSide(color: Colors.red),
-                      ),
+                          borderRadius: BorderRadius.circular(4)),
                       label: const Text('re-name you printer'),
                     ),
-                    validator: (String? name) {
-                      if (name == null && name!.isEmpty) {
-                        return 'Enter your device name first';
-                      } else if (name.length < 2) {
-                        return 'add more letters';
-                      } else {
-                        return null;
-                      }
-                    },
                   ),
                 ],
               ),
@@ -195,32 +227,31 @@ class BluetoothSettingsScreenState extends State<BluetoothSettingsScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4.0),
                       ),
-                      side: const BorderSide(width: 2
-                          // , color: Colors.red
-                          ),
+                      side: const BorderSide(width: 2),
                     ),
                     child:
                         const Text('OK', style: TextStyle(color: Colors.red)),
                     onPressed: () async {
                       await device.pair().then((value) {
                         setState(() {
+                          _defaultName = controller.text;
                           StorageService.saveDevice(
                               controller.text, device.id.id);
+
                           _defaultId = device.id.id;
+
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text("connected: ${device.id.id}"),
+                            content: Text("connected: ${device.name}"),
                             backgroundColor: Colors.blue,
                           ));
                         });
-                        _loadDefaultDevice();
+
                         controller.clear();
                         Navigator.pop(context);
                       }).catchError((e) {
                         // StorageService.remove(); this wil make everything wrong
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text("failed to connect ${device.name}"),
-                          // backgroundColor: Colors.red,
-                        ));
+                            content: Text("failed to connect ${device.name}")));
                       });
                     },
                   ),
