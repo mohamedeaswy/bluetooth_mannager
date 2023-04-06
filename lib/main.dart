@@ -3,10 +3,8 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'bluetooth_off_screen.dart';
 import 'bluetooth_settings_screen.dart';
 
-void main() async{
-
-  runApp(const FlutterBlueApp()
-  );
+void main() async {
+  runApp(const FlutterBlueApp());
 }
 
 class FlutterBlueApp extends StatelessWidget {
@@ -16,8 +14,7 @@ class FlutterBlueApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       color: Colors.lightBlue,
-      home:
-      StreamBuilder<BluetoothState>(
+      home: StreamBuilder<BluetoothState>(
           stream: FlutterBluePlus.instance.state,
           initialData: BluetoothState.unknown,
           builder: (c, snapshot) {

@@ -10,7 +10,7 @@ class StorageService {
 
   static void saveDevice(String name, String id) async {
     await remove();
-    
+
     await box.write('deviceName', name);
     await box.write('deviceId', id);
     print(getDeviceId());
