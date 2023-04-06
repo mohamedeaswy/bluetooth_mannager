@@ -120,64 +120,34 @@ class BluetoothSettingsScreenState extends State<BluetoothSettingsScreen> {
                 // || connectedDevices.contains(device)
                 ? true
                 : false,
-            onTap:
-            // isLoad
-            //     ? () {
-            //         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            //           content: Text("connecting  is in progress"),
-            //           backgroundColor: Colors.orange,
-            //         ));
-            //       }
-            //     :
-                () async {
-              // var connect = await device.connect(timeout: const Duration(seconds: 10));
-
-                    try{
-                      showLoaderDialog(context);
-                      await device.connect(timeout: const Duration(seconds: 10));
-                      selectedDeviceId = device.id.id;
-                      if(mounted){
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text("connected successful ${device.name}"),
-                          backgroundColor: Colors.blue,
-                        ));
-                      }
-                      setState(() {
-                        _selectedIndex = index;
-
-                      });
-                      // Navigator.of(context, rootNavigator: true).pop();
-                    }on Exception catch(e){
-
-
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text("Error $e"),
-                        backgroundColor: Colors.red,duration: const Duration(seconds: 5),
-                      ));
-                      setState(() {
-                        cantConnected = device.id.id;
-                      });
-                    }
-                    finally{
-                      setState(() {
-
-                      });
-                      if (mounted) {
-                        Navigator.of(context, rootNavigator: false).pop();
-                      }
-                    }
-                    // print(StorageService.getDeviceId());
-                    //
-                    // setState(() {
-                    //   isLoad = true;
-                    //   showLoaderDialog(context);
-                    //   print(isLoad);
-                    //
-                    //   _selectedIndex = index;
-                    // });
-                    }
-
-            ,
+            onTap: () async {
+              try {
+                showLoaderDialog(context);
+                await device.connect(timeout: const Duration(seconds: 10));
+                selectedDeviceId = device.id.id;
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text("connected successful ${device.name}"),
+                    backgroundColor: Colors.blue,
+                  ));
+                }
+                setState(() {
+                  _selectedIndex = index;
+                });
+              } on Exception catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text("Error $e"),
+                  backgroundColor: Colors.red,
+                  duration: const Duration(seconds: 5),
+                ));
+                setState(() => cantConnected = device.id.id);
+              } finally {
+                setState(() {});
+                if (mounted) {
+                  Navigator.of(context, rootNavigator: false).pop();
+                }
+              }
+            },
             title:
                 Text(_defaultId == device.id.id ? _defaultName : device.name),
             subtitle: Text(device.id.toString()),
@@ -205,13 +175,10 @@ class BluetoothSettingsScreenState extends State<BluetoothSettingsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(device.name),
-                  Text('Mac ID${device.id.id}'),
+                  Text('Mac ID: ${device.id.id}'),
                   Text('Type: ${device.type.name}'),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 15),
                   TextFormField(
-                    // onChanged: (String? val) {
-                    //   _defaultName = val ?? '';
-                    // },
                     controller: controller,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
@@ -250,7 +217,6 @@ class BluetoothSettingsScreenState extends State<BluetoothSettingsScreen> {
                         controller.clear();
                         Navigator.pop(context);
                       }).catchError((e) {
-                        // StorageService.remove(); this wil make everything wrong
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                             content: Text("failed to connect ${device.name}")));
                       });

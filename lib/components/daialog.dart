@@ -16,7 +16,7 @@ showLoaderDialog(BuildContext context) {
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const CircularProgressIndicator(),
+        const CircularProgressIndicator(),const SizedBox(height: 15),
         Center(
           child: OutlinedButton(onPressed: (){
             // if (context.mounted) {
