@@ -15,15 +15,9 @@ showLoaderDialog(BuildContext context) {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const CircularProgressIndicator(),const SizedBox(height: 15),
-        Center(
-          child: OutlinedButton(onPressed: (){
-            // if (context.mounted) {
-            Navigator.of(context, rootNavigator: false).pop();
-            // }
-          }, child: const Text('Stop')),
-        ),
+      children: const[
+         CircularProgressIndicator()
+
 
       ],
     ),
@@ -43,3 +37,10 @@ showLoaderDialog(BuildContext context) {
 }
 // ScaffoldMessenger.of(context).showSnackBar(snackBar);
 
+// Center(
+// child: OutlinedButton(onPressed: (){
+// // if (context.mounted) {
+// Navigator.of(context, rootNavigator: false).pop();
+// // }
+// }, child: const Text('Stop')),
+// ),
