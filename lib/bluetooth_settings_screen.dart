@@ -104,7 +104,7 @@ class BluetoothSettingsScreenState extends State<BluetoothSettingsScreen> {
       itemCount: _devicesList.length,
       itemBuilder: (BuildContext context, int index) {
         final BluetoothDevice device = _devicesList[index];
-        Color selectedColors = Colors.blue.shade200;
+        Color selectedColors = Colors.grey.shade300;
         Color defaultColor = Colors.white;
         Color errorColor = Colors.red.shade200;
         return Container(
@@ -115,69 +115,68 @@ class BluetoothSettingsScreenState extends State<BluetoothSettingsScreen> {
             // border: Border.all(color: cantConnected == selectedDeviceId ? errorColor : defaultColor),
           ),
           child: ListTile(
-            selectedColor: Colors.blue.shade700,
+            selectedColor: Colors.grey.shade700,
             selected: _selectedIndex == index
                 // || connectedDevices.contains(device)
                 ? true
                 : false,
-            onTap: isLoad
-                ? () {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text("connecting  is in progress"),
-                      backgroundColor: Colors.orange,
-                    ));
-                  }
-                : () async {
-                    print(StorageService.getDeviceId());
+            onTap:
+            // isLoad
+            //     ? () {
+            //         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            //           content: Text("connecting  is in progress"),
+            //           backgroundColor: Colors.orange,
+            //         ));
+            //       }
+            //     :
+                () async {
+              // var connect = await device.connect(timeout: const Duration(seconds: 10));
 
-                    setState(() {
-                      isLoad = true;
+                    try{
                       showLoaderDialog(context);
-                      print(isLoad);
-
-                      _selectedIndex = index;
-                    });
-                    // if (isLoad) {
-                    //   showLoaderDialog(context);
-                    // }
-                    await device.connect(timeout: const Duration(seconds: 10)).then((value) {
+                      await device.connect(timeout: const Duration(seconds: 10));
                       selectedDeviceId = device.id.id;
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text("connected successful ${device.name}"),
-                        backgroundColor: Colors.blue,
-                      ));
+                      if(mounted){
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text("connected successful ${device.name}"),
+                          backgroundColor: Colors.blue,
+                        ));
+                      }
                       setState(() {
-                        isLoad = false;
+                        _selectedIndex = index;
 
-                        print(isLoad);
                       });
                       // Navigator.of(context, rootNavigator: true).pop();
-                    }).onError((error, stackTrace) {
-                      isLoad = false;
+                    }on Exception catch(e){
 
-                      print(isLoad);
 
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text("Error $error"),
-                        backgroundColor: Colors.red,
+                        content: Text("Error $e"),
+                        backgroundColor: Colors.red,duration: const Duration(seconds: 5),
                       ));
                       setState(() {
                         cantConnected = device.id.id;
                       });
-                      // Navigator.of(context, rootNavigator: true).pop();
-                    });
-
-                    setState(() {
-                      isLoad = false;
-
-                      print(isLoad);
-                    });
-                    if (mounted) {
-                      Navigator.of(context, rootNavigator: false).pop();
                     }
-                  }
+                    finally{
+                      setState(() {
 
-            // catchError((e) {}
+                      });
+                      if (mounted) {
+                        Navigator.of(context, rootNavigator: false).pop();
+                      }
+                    }
+                    // print(StorageService.getDeviceId());
+                    //
+                    // setState(() {
+                    //   isLoad = true;
+                    //   showLoaderDialog(context);
+                    //   print(isLoad);
+                    //
+                    //   _selectedIndex = index;
+                    // });
+                    }
+
             ,
             title:
                 Text(_defaultId == device.id.id ? _defaultName : device.name),
