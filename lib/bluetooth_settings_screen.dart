@@ -182,9 +182,11 @@ class BluetoothSettingsScreenState extends State<BluetoothSettingsScreen> {
             title:
                 Text(_defaultId == device.id.id ? _defaultName : device.name),
             subtitle: Text(device.id.toString()),
-            trailing: _selectedIndex == index && _defaultId == device.id.id
+            trailing: _selectedIndex == index
                 ? button(device)
-                : const Text('Default'),
+                : _defaultId == device.id.id
+                    ? const Text('Defualt')
+                    : const SizedBox(),
           ),
         );
       });
