@@ -140,7 +140,7 @@ class BluetoothSettingsScreenState extends State<BluetoothSettingsScreen> {
                     // if (isLoad) {
                     //   showLoaderDialog(context);
                     // }
-                    await device.connect().then((value) {
+                    await device.connect(timeout: const Duration(seconds: 10)).then((value) {
                       selectedDeviceId = device.id.id;
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                         content: Text("connected successful ${device.name}"),
@@ -185,7 +185,7 @@ class BluetoothSettingsScreenState extends State<BluetoothSettingsScreen> {
             trailing: _selectedIndex == index
                 ? button(device)
                 : _defaultId == device.id.id
-                    ? const Text('Defualt')
+                    ? const Text('Default')
                     : const SizedBox(),
           ),
         );

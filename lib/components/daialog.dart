@@ -10,12 +10,27 @@ SnackBar snackBar({required String msg, required BuildContext context}) =>
     );
 
 showLoaderDialog(BuildContext context) {
-  AlertDialog alert = const AlertDialog(
-    content: Center(
-      child: CircularProgressIndicator(),
+  AlertDialog alert =  AlertDialog(
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const CircularProgressIndicator(),
+        Center(
+          child: OutlinedButton(onPressed: (){
+            // if (context.mounted) {
+            Navigator.of(context, rootNavigator: false).pop();
+            // }
+          }, child: const Text('Stop')),
+        ),
+
+      ],
     ),
-    backgroundColor: Colors.black26,
+    backgroundColor: Colors.white38,
+
   );
+
   showDialog(
     barrierDismissible: false,
     context: context,
