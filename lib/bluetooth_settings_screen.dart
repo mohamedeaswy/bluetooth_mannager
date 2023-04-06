@@ -11,18 +11,19 @@ class BluetoothSettingsScreen extends StatefulWidget {
 }
 
 class BluetoothSettingsScreenState extends State<BluetoothSettingsScreen> {
-  BluetoothDevice? _defaultDevice;
   bool isLoad = false;
+  TextEditingController controller = TextEditingController();
   final FlutterBluePlus _flutterBlue = FlutterBluePlus.instance;
   List<BluetoothDevice> connectedDevices = [];
   void getConn() async {
     connectedDevices = await _flutterBlue.connectedDevices;
   }
 
+  BluetoothDevice? oldDevice;
   @override
   void initState() {
     super.initState();
-    StorageService.init;
+
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadDefaultDevice();
@@ -64,6 +65,75 @@ class BluetoothSettingsScreenState extends State<BluetoothSettingsScreen> {
       _defaultId = StorageService.getDeviceId();
       _defaultName = StorageService.getDeviceName();
     });
+  }
+
+  Future pairWithDevice(BluetoothDevice device) async {
+    await device.pair().then((value) {
+      setState(() {
+        _defaultName = controller.text;
+        StorageService.saveDevice(controller.text, device.id.id);
+
+        _defaultId = device.id.id;
+
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("connected: ${device.name}"),
+          backgroundColor: Colors.blue,
+        ));
+      });
+
+      controller.clear();
+      Navigator.pop(context);
+    }).catchError((e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("failed to connect ${device.name}")));
+    });
+  }
+
+  Future onTapDevice(
+      {required int index, required BluetoothDevice device}) async {
+    {
+      showLoaderDialog(context);
+      if (oldDevice != null) {
+        oldDevice!.disconnect();
+      }
+      oldDevice = device;
+
+      await device
+          .connect(
+              timeout: const Duration(seconds: 20)
+              )
+          .then((value) {
+        selectedDeviceId = device.id.id;
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("connected successful ${device.name}"),
+            backgroundColor: Colors.blue,
+          ));
+        }
+        setState(() {
+          _selectedIndex = index;
+        });
+      }).catchError((e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Error $e"),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+        ));
+        setState(() => cantConnected = device.id.id);
+      }).onError((error, stackTrace) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Error $error"),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+        ));
+        setState(() => cantConnected = device.id.id);
+      }).whenComplete(() {
+        setState(() {});
+        if (mounted) {
+          Navigator.of(context, rootNavigator: false).pop();
+        }
+      });
+    }
   }
 
   @override
@@ -120,34 +190,7 @@ class BluetoothSettingsScreenState extends State<BluetoothSettingsScreen> {
                 // || connectedDevices.contains(device)
                 ? true
                 : false,
-            onTap: () async {
-              try {
-                showLoaderDialog(context);
-                await device.connect(timeout: const Duration(seconds: 10));
-                selectedDeviceId = device.id.id;
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text("connected successful ${device.name}"),
-                    backgroundColor: Colors.blue,
-                  ));
-                }
-                setState(() {
-                  _selectedIndex = index;
-                });
-              } on Exception catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text("Error $e"),
-                  backgroundColor: Colors.red,
-                  duration: const Duration(seconds: 5),
-                ));
-                setState(() => cantConnected = device.id.id);
-              } finally {
-                setState(() {});
-                if (mounted) {
-                  Navigator.of(context, rootNavigator: false).pop();
-                }
-              }
-            },
+            onTap: () => onTapDevice(index: index, device: device),
             title:
                 Text(_defaultId == device.id.id ? _defaultName : device.name),
             subtitle: Text(device.id.toString()),
@@ -161,7 +204,7 @@ class BluetoothSettingsScreenState extends State<BluetoothSettingsScreen> {
       });
 
   // Adding custom name pop up
-  TextEditingController controller = TextEditingController();
+
   Widget button(BluetoothDevice device) => ElevatedButton(
       onPressed: () {
         showDialog(
@@ -199,28 +242,7 @@ class BluetoothSettingsScreenState extends State<BluetoothSettingsScreen> {
                     ),
                     child:
                         const Text('OK', style: TextStyle(color: Colors.red)),
-                    onPressed: () async {
-                      await device.pair().then((value) {
-                        setState(() {
-                          _defaultName = controller.text;
-                          StorageService.saveDevice(
-                              controller.text, device.id.id);
-
-                          _defaultId = device.id.id;
-
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text("connected: ${device.name}"),
-                            backgroundColor: Colors.blue,
-                          ));
-                        });
-
-                        controller.clear();
-                        Navigator.pop(context);
-                      }).catchError((e) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text("failed to connect ${device.name}")));
-                      });
-                    },
+                    onPressed: () => pairWithDevice(device),
                   ),
                 ),
               ],

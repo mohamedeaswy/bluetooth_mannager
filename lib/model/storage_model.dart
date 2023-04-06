@@ -2,7 +2,7 @@ import 'package:get_storage/get_storage.dart';
 
 class StorageService {
   static final box = GetStorage();
-  static final init = GetStorage.init();
+  // static final init = GetStorage.init();
 
   static Future remove() async {
     await box.erase();
